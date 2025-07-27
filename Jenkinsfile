@@ -16,7 +16,7 @@ pipeline{
                 echo "Installing dependencies..."
                 sh "npm install"
                 echo "Building the project..."
-                sh "npm run build"
+                sh "npm run builD"
                 echo "Build completed successfully."
             }
         }
