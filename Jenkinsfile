@@ -1,4 +1,4 @@
-pipeline{
+pipeline {
     agent any
 
     environment {
@@ -10,36 +10,38 @@ pipeline{
         SERVER = 'nginx'
     }
 
-    stages{
+    stages {
         stage('Build') {
             steps {
                 echo "Installing dependencies..."
-                sh "npm install"
+                sh 'npm install'
                 echo "Building the project..."
-                sh "npm run builD"
+                sh 'npm run build'
                 echo "Build completed successfully."
             }
         }
-        stage ("Deploy") {
-                echo "Deploying start..."
-                sshagent(credential: [env.SSH_CREDENTIALS_ID]){
-                sh """
-                    echo "Creating remote directory"
-                    ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${EC2_HOST} 'mkdir -p ${REMOTE_PATH}'
 
-                    echo "Copying distribution to remote file"
-                    scp -o StrictHostKeyChecking=no -r dist/* ${REMOTE_USER}@${EC2_HOST}:${REMOTE_PATH}/
+        stage('Deploy') {
+            steps {
+                echo "Starting deployment..."
+                sshagent(credentials: [env.SSH_CREDENTIALS_ID]) {
+                    sh """
+                        echo "Creating remote directory"
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${EC2_HOST} "mkdir -p ${REMOTE_PATH}"
 
-                    echo "Restarting nginx"
-                    ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${EC2_HOST}'
-                        sudo rm -rf ${env.WEB_ROOT}/*
-                        sudo cp -r ${REMOTE_PATH}/* ${WEB_ROOT}/
-                        sudo systemctl restart ${SERVER}
-                        echo "Deployment completed successfully."
-                    '
-                """
+                        echo "Copying distribution to remote server"
+                        scp -o StrictHostKeyChecking=no -r dist/* ${REMOTE_USER}@${EC2_HOST}:${REMOTE_PATH}/
+
+                        echo "Deploying files to web root and restarting nginx"
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${EC2_HOST} "
+                            sudo rm -rf ${WEB_ROOT}/*
+                            sudo cp -r ${REMOTE_PATH}/* ${WEB_ROOT}/
+                            sudo systemctl restart ${SERVER}
+                            echo 'Deployment completed successfully.'
+                        "
+                    """
                 }
-
+            }
         }
     }
 }
