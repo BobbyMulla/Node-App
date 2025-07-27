@@ -22,7 +22,7 @@ pipeline{
         }
         stage ("Deploy") {
                 echo "Deploying start..."
-                sshagent(credential: [env.SSH_CREDENTIALS_ID]){,
+                sshagent(credential: [env.SSH_CREDENTIALS_ID]){
                 sh """
                     echo "Creating remote directory"
                     ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${EC2_HOST} 'mkdir -p ${REMOTE_PATH}'
